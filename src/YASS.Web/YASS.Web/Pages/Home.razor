@@ -1,0 +1,156 @@
+﻿@page "/"
+@using YASS.Shared.Models
+@using YASS.Web.Services
+@inject IRoomApiService RoomService
+@inject NavigationManager Navigation
+
+<PageTitle>YASS - 实时屏幕共享</PageTitle>
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5">
+                <span class="text-primary">YASS</span> - 实时屏幕共享
+            </h1>
+            <p class="lead text-muted">选择一个房间开始观看</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" @onclick="RefreshRooms" disabled="@_isLoading">
+                @if (_isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                刷新
+            </button>
+        </div>
+    </div>
+
+    @if (_errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @_errorMessage
+        </div>
+    }
+
+    @if (_rooms == null)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+        </div>
+    }
+    else if (_rooms.Count == 0)
+    {
+        <div class="text-center py-5">
+            <div class="display-1 text-muted mb-3">📺</div>
+            <h4 class="text-muted">暂无房间</h4>
+            <p class="text-muted">等待推流者创建房间...</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var room in _rooms)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm room-card" @onclick="() => OpenRoom(room.Id)">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">@room.Name</h5>
+                                <span class="badge @GetStatusBadgeClass(room.Status)">
+                                    @GetStatusText(room.Status)
+                                </span>
+                            </div>
+                            <p class="card-text text-muted small">
+                                @(room.Description ?? "暂无描述")
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">
+                                    <span class="me-3">👤 @room.OwnerName</span>
+                                    <span>👀 @room.ViewerCount 人观看</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <small class="text-muted">
+                                创建于 @room.CreatedAt.ToLocalTime().ToString("MM-dd HH:mm")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .room-card {
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .room-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+
+@code {
+    private List<RoomInfo>? _rooms;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshRooms();
+    }
+
+    private async Task RefreshRooms()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var response = await RoomService.GetRoomsAsync();
+            _rooms = response?.Rooms ?? [];
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"加载房间列表失败: {ex.Message}";
+            _rooms = [];
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenRoom(string roomId)
+    {
+        Navigation.NavigateTo($"/watch/{roomId}");
+    }
+
+    private string GetStatusBadgeClass(YASS.Shared.Enums.RoomStatus status)
+    {
+        return status switch
+        {
+            YASS.Shared.Enums.RoomStatus.Live => "bg-success",
+            YASS.Shared.Enums.RoomStatus.Waiting => "bg-warning text-dark",
+            YASS.Shared.Enums.RoomStatus.Ended => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusText(YASS.Shared.Enums.RoomStatus status)
+    {
+        return status switch
+        {
+            YASS.Shared.Enums.RoomStatus.Live => "直播中",
+            YASS.Shared.Enums.RoomStatus.Waiting => "等待中",
+            YASS.Shared.Enums.RoomStatus.Ended => "已结束",
+            _ => "未知"
+        };
+    }
+}

@@ -1,0 +1,117 @@
+<ui:FluentWindow x:Class="YASS.Client.Desktop.Views.StreamingPage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        mc:Ignorable="d"
+        Title="推流中" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏 -->
+        <ui:TitleBar Grid.Row="0" Title="推流中" />
+
+        <!-- 主内容 -->
+        <Grid Grid.Row="1" Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 房间信息 -->
+            <ui:Card Grid.Row="0" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <ui:TextBlock Text="{Binding RoomName}" FontTypography="BodyStrong"/>
+                        <ui:TextBlock Text="{Binding CaptureSourceName}" Opacity="0.7" FontSize="12"/>
+                    </StackPanel>
+                    <ui:Badge Grid.Column="1" Appearance="Success" Content="{Binding StatusMessage}"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- 统计信息 -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <ui:Card Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
+                    <StackPanel>
+                        <ui:TextBlock Text="时长" FontSize="12" Opacity="0.7"/>
+                        <ui:TextBlock Text="{Binding Duration}" FontTypography="Title" FontSize="24"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
+                    <StackPanel>
+                        <ui:TextBlock Text="码率" FontSize="12" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:TextBlock Text="{Binding CurrentBitrate, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
+                            <ui:TextBlock Text=" Kbps" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Row="1" Grid.Column="0" Margin="0,8,8,8">
+                    <StackPanel>
+                        <ui:TextBlock Text="帧率" FontSize="12" Opacity="0.7"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:TextBlock Text="{Binding CurrentFps, StringFormat=N1}" FontTypography="Title" FontSize="24"/>
+                            <ui:TextBlock Text=" FPS" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Row="1" Grid.Column="1" Margin="8,8,0,8">
+                    <StackPanel>
+                        <ui:TextBlock Text="已发送帧" FontSize="12" Opacity="0.7"/>
+                        <ui:TextBlock Text="{Binding FramesSent, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Row="2" Grid.Column="0" Margin="0,8,8,0">
+                    <StackPanel>
+                        <ui:TextBlock Text="丢弃帧" FontSize="12" Opacity="0.7"/>
+                        <ui:TextBlock Text="{Binding FramesDropped, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Row="2" Grid.Column="1" Margin="8,8,0,0">
+                    <StackPanel>
+                        <ui:TextBlock Text="编码器" FontSize="12" Opacity="0.7"/>
+                        <ui:TextBlock Text="{Binding EncoderInfo}" FontTypography="BodyStrong"/>
+                    </StackPanel>
+                </ui:Card>
+            </Grid>
+
+            <!-- 控制按钮 -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                <ui:Button Content="停止推流" 
+                          Command="{Binding StopStreamingCommand}"
+                          Appearance="Danger"
+                          Icon="{ui:SymbolIcon Stop24}"
+                          Width="150" Height="40"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

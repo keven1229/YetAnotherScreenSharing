@@ -1,0 +1,67 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "YASS.Server.Api",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/src/YASS.Server.Api/YASS.Server.Api/bin/Debug/net9.0/YASS.Server.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/YASS.Server.Api/YASS.Server.Api",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5000"
+            },
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "YASS.Client.Desktop",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-desktop",
+            "program": "${workspaceFolder}/src/YASS.Client.Desktop/YASS.Client.Desktop/bin/Debug/net9.0-windows10.0.19041.0/YASS.Client.Desktop.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/YASS.Client.Desktop/YASS.Client.Desktop",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "YASS.Web (浏览器调试)",
+            "type": "blazorwasm",
+            "request": "launch",
+            "browser": "edge",
+            "cwd": "${workspaceFolder}/src/YASS.Web/YASS.Web",
+            "url": "http://localhost:5001"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "🚀 启动全部 (API + Desktop)",
+            "configurations": [
+                "YASS.Server.Api",
+                "YASS.Client.Desktop"
+            ],
+            "stopAll": true,
+            "presentation": {
+                "hidden": false,
+                "group": "YASS",
+                "order": 1
+            }
+        },
+        {
+            "name": "🌐 启动全部 (API + Web)",
+            "configurations": [
+                "YASS.Server.Api",
+                "YASS.Web (浏览器调试)"
+            ],
+            "stopAll": true,
+            "presentation": {
+                "hidden": false,
+                "group": "YASS",
+                "order": 2
+            }
+        }
+    ]
+}

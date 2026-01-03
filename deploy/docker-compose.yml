@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # SRS v6 流媒体服务器
+  srs:
+    build:
+      context: ./srs
+      dockerfile: Dockerfile
+    image: yass-srs:v6
+    container_name: yass-srs
+    ports:
+      - "1935:1935"   # RTMP
+      - "8080:8080"   # HTTP-FLV/HLS
+      - "1985:1985"   # HTTP API
+    volumes:
+      - ./srs/srs.conf:/usr/local/srs/conf/srs.conf:ro
+      - srs-data:/usr/local/srs/objs/nginx/html
+    restart: unless-stopped
+    networks:
+      - yass-network
+
+  # API 服务器 (可选，开发时可单独运行)
+  # api:
+  #   build:
+  #     context: ../src/YASS.Server.Api/YASS.Server.Api
+  #     dockerfile: Dockerfile
+  #   image: yass-api:latest
+  #   container_name: yass-api
+  #   ports:
+  #     - "5000:8080"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Production
+  #     - Srs__RtmpServer=rtmp://srs:1935
+  #     - Srs__HttpFlvServer=http://localhost:8080
+  #     - Srs__HlsServer=http://localhost:8080
+  #   depends_on:
+  #     - srs
+  #   networks:
+  #     - yass-network
+
+volumes:
+  srs-data:
+
+networks:
+  yass-network:
+    driver: bridge

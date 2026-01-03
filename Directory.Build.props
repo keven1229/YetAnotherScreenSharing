@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Company>YASS</Company>
+    <Product>Yet Another Screen Sharing</Product>
+    <Copyright>Copyright © 2026</Copyright>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

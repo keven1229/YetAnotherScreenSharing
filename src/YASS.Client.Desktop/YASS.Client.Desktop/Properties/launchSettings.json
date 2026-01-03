@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "YASS.Client.Desktop": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

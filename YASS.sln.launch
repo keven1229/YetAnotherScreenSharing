@@ -1,0 +1,72 @@
+[
+  {
+    "Name": "🚀 API + 桌面客户端",
+    "Projects": [
+      {
+        "Path": "src\\YASS.Server.Api\\YASS.Server.Api\\YASS.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Server.Api"
+      },
+      {
+        "Path": "src\\YASS.Client.Desktop\\YASS.Client.Desktop\\YASS.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Client.Desktop"
+      }
+    ]
+  },
+  {
+    "Name": "🌐 API + Web 前端",
+    "Projects": [
+      {
+        "Path": "src\\YASS.Server.Api\\YASS.Server.Api\\YASS.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Server.Api"
+      },
+      {
+        "Path": "src\\YASS.Web\\YASS.Web\\YASS.Web.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "🎯 全部服务",
+    "Projects": [
+      {
+        "Path": "src\\YASS.Server.Api\\YASS.Server.Api\\YASS.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Server.Api"
+      },
+      {
+        "Path": "src\\YASS.Client.Desktop\\YASS.Client.Desktop\\YASS.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Client.Desktop"
+      },
+      {
+        "Path": "src\\YASS.Web\\YASS.Web\\YASS.Web.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "仅 API 服务器",
+    "Projects": [
+      {
+        "Path": "src\\YASS.Server.Api\\YASS.Server.Api\\YASS.Server.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Server.Api"
+      }
+    ]
+  },
+  {
+    "Name": "仅桌面客户端",
+    "Projects": [
+      {
+        "Path": "src\\YASS.Client.Desktop\\YASS.Client.Desktop\\YASS.Client.Desktop.csproj",
+        "Action": "Start",
+        "DebugTarget": "YASS.Client.Desktop"
+      }
+    ]
+  }
+]
