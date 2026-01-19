@@ -143,10 +143,13 @@
     {
         _isLoading = true;
         _errorMessage = null;
+        Console.WriteLine($"Loading room data for: {RoomId}");
 
         try
         {
             _room = await RoomService.GetRoomAsync(RoomId);
+            Console.WriteLine($"Room loaded: {_room?.Name ?? "null"}");
+            
             if (_room == null)
             {
                 _errorMessage = "房间不存在";
@@ -154,14 +157,17 @@
             }
 
             _playbackUrls = await RoomService.GetPlaybackUrlsAsync(RoomId);
+            Console.WriteLine($"Playback URLs loaded: {_playbackUrls?.HttpFlvUrl ?? "null"}");
         }
         catch (Exception ex)
         {
             _errorMessage = $"加载房间信息失败: {ex.Message}";
+            Console.WriteLine($"Load error: {ex}");
         }
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -170,16 +176,19 @@
         if (_playbackUrls == null) return;
 
         _isLoading = true;
+        StateHasChanged();
+        
         try
         {
-            // 优先使用 H.264 转码流（Web 兼容）
-            var url = _playbackUrls.HttpFlvH264Url ?? _playbackUrls.HttpFlvUrl;
+            // 使用原始 HTTP-FLV 流（H264 转码流需要单独配置 SRS 转码）
+            var url = _playbackUrls.HttpFlvUrl;
             if (string.IsNullOrEmpty(url))
             {
                 _errorMessage = "无可用播放地址";
                 return;
             }
 
+            Console.WriteLine($"Playing URL: {url}");
             await PlayerService.InitializeAsync("videoPlayer", url);
             await PlayerService.PlayAsync();
             _isPlaying = true;
@@ -187,10 +196,12 @@
         catch (Exception ex)
         {
             _errorMessage = $"播放失败: {ex.Message}";
+            Console.WriteLine($"Play error: {ex}");
         }
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
     }
 

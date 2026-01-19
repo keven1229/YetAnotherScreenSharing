@@ -4,45 +4,62 @@ window.flvPlayer = {
     videoElement: null,
 
     initialize: function (elementId, url) {
-        if (this.player) {
-            this.dispose();
-        }
+        return new Promise((resolve, reject) => {
+            try {
+                if (this.player) {
+                    this.dispose();
+                }
 
-        this.videoElement = document.getElementById(elementId);
-        if (!this.videoElement) {
-            console.error('Video element not found:', elementId);
-            return;
-        }
+                this.videoElement = document.getElementById(elementId);
+                if (!this.videoElement) {
+                    console.error('Video element not found:', elementId);
+                    reject('Video element not found: ' + elementId);
+                    return;
+                }
 
-        if (flvjs.isSupported()) {
-            this.player = flvjs.createPlayer({
-                type: 'flv',
-                url: url,
-                isLive: true,
-                hasAudio: false,
-                hasVideo: true,
-                cors: true
-            }, {
-                enableWorker: true,
-                enableStashBuffer: false,
-                stashInitialSize: 128,
-                lazyLoad: false,
-                lazyLoadMaxDuration: 0,
-                seekType: 'range'
-            });
+                if (!flvjs || !flvjs.isSupported()) {
+                    console.error('FLV.js is not supported in this browser');
+                    reject('FLV.js is not supported');
+                    return;
+                }
 
-            this.player.attachMediaElement(this.videoElement);
-            this.player.load();
+                console.log('Creating FLV player for URL:', url);
+                
+                this.player = flvjs.createPlayer({
+                    type: 'flv',
+                    url: url,
+                    isLive: true,
+                    hasAudio: false,
+                    hasVideo: true,
+                    cors: true
+                }, {
+                    enableWorker: true,
+                    enableStashBuffer: false,
+                    stashInitialSize: 128,
+                    lazyLoad: false,
+                    lazyLoadMaxDuration: 0,
+                    seekType: 'range'
+                });
 
-            // Error handling
-            this.player.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
-                console.error('FLV.js error:', errorType, errorDetail, errorInfo);
-            });
+                this.player.attachMediaElement(this.videoElement);
+                this.player.load();
 
-            console.log('FLV player initialized:', url);
-        } else {
-            console.error('FLV.js is not supported in this browser');
-        }
+                // Error handling
+                this.player.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
+                    console.error('FLV.js error:', errorType, errorDetail, errorInfo);
+                });
+
+                this.player.on(flvjs.Events.LOADING_COMPLETE, () => {
+                    console.log('FLV loading complete');
+                });
+
+                console.log('FLV player initialized successfully');
+                resolve();
+            } catch (e) {
+                console.error('FLV player initialization failed:', e);
+                reject(e.message);
+            }
+        });
     },
 
     play: function () {

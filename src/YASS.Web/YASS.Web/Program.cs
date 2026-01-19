@@ -7,6 +7,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// 配置日志
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
 // API 服务配置
 var apiBaseAddress = builder.Configuration["ApiBaseAddress"] ?? "http://localhost:5000";
 builder.Services.AddHttpClient("YassApi", client =>
