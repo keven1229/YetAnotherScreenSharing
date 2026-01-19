@@ -13,12 +13,12 @@ public partial class StreamingPage : FluentWindow
         DataContext = viewModel;
         InitializeComponent();
         
-        // 窗口加载后自动开始推流
+        // 窗口加载后自动获取推流地址
         Loaded += async (s, e) =>
         {
-            if (ViewModel.StartStreamingCommand.CanExecute(null))
+            if (ViewModel.LoadRtmpUrlCommand.CanExecute(null))
             {
-                await ViewModel.StartStreamingCommand.ExecuteAsync(null);
+                await ViewModel.LoadRtmpUrlCommand.ExecuteAsync(null);
             }
         };
     }

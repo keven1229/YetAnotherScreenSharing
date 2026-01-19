@@ -11,12 +11,12 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "YASS API", Version = "v1" });
 });
 
-// CORS for Blazor WASM
+// CORS for Blazor WASM and Desktop Client
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazor", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5002", "https://localhost:5003")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowBlazor");
+app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 

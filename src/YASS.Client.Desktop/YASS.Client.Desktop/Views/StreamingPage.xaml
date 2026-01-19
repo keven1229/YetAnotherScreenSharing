@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="推流中" Height="500" Width="600"
+        Title="推流地址" Height="700" Width="700"
         WindowStartupLocation="CenterOwner"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica">
@@ -18,14 +18,14 @@
         </Grid.RowDefinitions>
 
         <!-- 标题栏 -->
-        <ui:TitleBar Grid.Row="0" Title="推流中" />
+        <ui:TitleBar Grid.Row="0" Title="推流地址" />
 
         <!-- 主内容 -->
         <Grid Grid.Row="1" Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- 房间信息 -->
@@ -37,81 +37,163 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <ui:TextBlock Text="{Binding RoomName}" FontTypography="BodyStrong"/>
-                        <ui:TextBlock Text="{Binding CaptureSourceName}" Opacity="0.7" FontSize="12"/>
+                        <ui:TextBlock Text="{Binding StatusMessage}" Opacity="0.7" FontSize="12"/>
                     </StackPanel>
-                    <ui:Badge Grid.Column="1" Appearance="Success" Content="{Binding StatusMessage}"/>
                 </Grid>
             </ui:Card>
 
-            <!-- 统计信息 -->
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <!-- RTMP推流地址 -->
+            <ui:Card Grid.Row="1" Margin="0,0,0,16">
+                <StackPanel>
+                    <ui:TextBlock Text="推流地址" FontTypography="BodyStrong" Margin="0,0,0,12"/>
+                    
+                    <!-- RTMP服务器地址 -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBlock Text="服务器:" VerticalAlignment="Center" Opacity="0.7"/>
+                        <ui:TextBox Grid.Column="1" 
+                                   Text="{Binding RtmpUrl, Mode=OneWay}" 
+                                   IsReadOnly="True" 
+                                   Margin="0,0,8,0"/>
+                        <ui:Button Grid.Column="2" 
+                                  Content="复制" 
+                                  Command="{Binding CopyRtmpUrlCommand}"
+                                  Icon="{ui:SymbolIcon Copy24}"/>
+                    </Grid>
 
-                <ui:Card Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
-                    <StackPanel>
-                        <ui:TextBlock Text="时长" FontSize="12" Opacity="0.7"/>
-                        <ui:TextBlock Text="{Binding Duration}" FontTypography="Title" FontSize="24"/>
-                    </StackPanel>
-                </ui:Card>
+                    <!-- 流密钥 -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBlock Text="流密钥:" VerticalAlignment="Center" Opacity="0.7"/>
+                        <ui:TextBox Grid.Column="1" 
+                                   Text="{Binding StreamKey, Mode=OneWay}" 
+                                   IsReadOnly="True" 
+                                   Margin="0,0,8,0"/>
+                        <ui:Button Grid.Column="2" 
+                                  Content="复制" 
+                                  Command="{Binding CopyStreamKeyCommand}"
+                                  Icon="{ui:SymbolIcon Copy24}"/>
+                    </Grid>
 
-                <ui:Card Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
-                    <StackPanel>
-                        <ui:TextBlock Text="码率" FontSize="12" Opacity="0.7"/>
-                        <StackPanel Orientation="Horizontal">
-                            <ui:TextBlock Text="{Binding CurrentBitrate, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
-                            <ui:TextBlock Text=" Kbps" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                    <!-- 完整地址 -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBlock Text="完整地址:" VerticalAlignment="Center" Opacity="0.7"/>
+                        <ui:TextBox Grid.Column="1" 
+                                   IsReadOnly="True" 
+                                   Margin="0,0,8,0">
+                            <ui:TextBox.Text>
+                                <MultiBinding StringFormat="{}{0}/{1}">
+                                    <Binding Path="RtmpUrl"/>
+                                    <Binding Path="StreamKey"/>
+                                </MultiBinding>
+                            </ui:TextBox.Text>
+                        </ui:TextBox>
+                        <ui:Button Grid.Column="2" 
+                                  Content="复制" 
+                                  Command="{Binding CopyFullUrlCommand}"
+                                  Icon="{ui:SymbolIcon Copy24}"/>
+                    </Grid>
+
+                    <!-- 使用说明 -->
+                    <ui:InfoBar Margin="0,12,0,0" 
+                               Title="使用说明" 
+                               Severity="Informational"
+                               IsOpen="True"
+                               IsClosable="False">
+                        <ui:InfoBar.Content>
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4">
+                                    使用 OBS Studio、FFmpeg 或其他推流工具将您的屏幕内容推送到上述RTMP地址。
+                                </TextBlock>
+                                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,4,0,4">
+                                    OBS Studio 设置：
+                                </TextBlock>
+                                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4">
+                                    1. 设置 → 推流 → 服务：自定义<LineBreak/>
+                                    2. 填入上方的"服务器"和"流密钥"<LineBreak/>
+                                    3. 添加"显示器采集"或"窗口采集"源<LineBreak/>
+                                    4. 点击"开始推流"
+                                </TextBlock>
+                                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,8,0,4">
+                                    FFmpeg 命令示例：
+                                </TextBlock>
+                                <ui:TextBox IsReadOnly="True" 
+                                           FontFamily="Consolas" 
+                                           FontSize="11"
+                                           TextWrapping="Wrap">
+                                    <ui:TextBox.Text>
+                                        <MultiBinding StringFormat="ffmpeg -f gdigrab -i desktop -c:v libx264 -preset ultrafast -tune zerolatency -f flv {0}/{1}">
+                                            <Binding Path="RtmpUrl"/>
+                                            <Binding Path="StreamKey"/>
+                                        </MultiBinding>
+                                    </ui:TextBox.Text>
+                                </ui:TextBox>
+                            </StackPanel>
+                        </ui:InfoBar.Content>
+                    </ui:InfoBar>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- 推流配置信息 -->
+            <ui:Card Grid.Row="2">
+                <StackPanel>
+                    <ui:TextBlock Text="推荐配置" FontTypography="BodyStrong" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
+                            <ui:TextBlock Text="分辨率" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="1920x1080 推荐" FontSize="13"/>
                         </StackPanel>
-                    </StackPanel>
-                </ui:Card>
 
-                <ui:Card Grid.Row="1" Grid.Column="0" Margin="0,8,8,8">
-                    <StackPanel>
-                        <ui:TextBlock Text="帧率" FontSize="12" Opacity="0.7"/>
-                        <StackPanel Orientation="Horizontal">
-                            <ui:TextBlock Text="{Binding CurrentFps, StringFormat=N1}" FontTypography="Title" FontSize="24"/>
-                            <ui:TextBlock Text=" FPS" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
+                            <ui:TextBlock Text="帧率" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="30 FPS" FontSize="13"/>
                         </StackPanel>
-                    </StackPanel>
-                </ui:Card>
 
-                <ui:Card Grid.Row="1" Grid.Column="1" Margin="8,8,0,8">
-                    <StackPanel>
-                        <ui:TextBlock Text="已发送帧" FontSize="12" Opacity="0.7"/>
-                        <ui:TextBlock Text="{Binding FramesSent, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
-                    </StackPanel>
-                </ui:Card>
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,8,8,8">
+                            <ui:TextBlock Text="编码器" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="H.264 / x264" FontSize="13"/>
+                        </StackPanel>
 
-                <ui:Card Grid.Row="2" Grid.Column="0" Margin="0,8,8,0">
-                    <StackPanel>
-                        <ui:TextBlock Text="丢弃帧" FontSize="12" Opacity="0.7"/>
-                        <ui:TextBlock Text="{Binding FramesDropped, StringFormat=N0}" FontTypography="Title" FontSize="24"/>
-                    </StackPanel>
-                </ui:Card>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,8,0,8">
+                            <ui:TextBlock Text="预设" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="ultrafast / veryfast" FontSize="13"/>
+                        </StackPanel>
 
-                <ui:Card Grid.Row="2" Grid.Column="1" Margin="8,8,0,0">
-                    <StackPanel>
-                        <ui:TextBlock Text="编码器" FontSize="12" Opacity="0.7"/>
-                        <ui:TextBlock Text="{Binding EncoderInfo}" FontTypography="BodyStrong"/>
-                    </StackPanel>
-                </ui:Card>
-            </Grid>
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,8,8,0">
+                            <ui:TextBlock Text="码率控制" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="CBR (固定码率)" FontSize="13"/>
+                        </StackPanel>
 
-            <!-- 控制按钮 -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
-                <ui:Button Content="停止推流" 
-                          Command="{Binding StopStreamingCommand}"
-                          Appearance="Danger"
-                          Icon="{ui:SymbolIcon Stop24}"
-                          Width="150" Height="40"/>
-            </StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,8,0,0">
+                            <ui:TextBlock Text="关键帧间隔" FontSize="11" Opacity="0.6"/>
+                            <ui:TextBlock Text="2秒" FontSize="13"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
         </Grid>
     </Grid>
 </ui:FluentWindow>

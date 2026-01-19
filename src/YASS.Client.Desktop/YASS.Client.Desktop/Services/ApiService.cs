@@ -33,16 +33,29 @@ public class ApiService : IApiService
 
     public async Task<RoomListResponse?> GetRoomsAsync(int page = 1, int pageSize = 20)
     {
-        var client = CreateClient();
-        var response = await client.GetFromJsonAsync<ApiResponse<RoomListResponse>>($"/api/rooms?page={page}&pageSize={pageSize}");
-        return response?.Data;
+        try
+        {
+            var client = CreateClient();
+            var response = await client.GetFromJsonAsync<ApiResponse<RoomListResponse>>($"/api/rooms?page={page}&pageSize={pageSize}");
+            return response?.Data;
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new HttpRequestException($"无法连接到API服务器 (http://localhost:5000): {ex.Message}", ex);
+        }
     }
 
     public async Task<CreateRoomResponse?> CreateRoomAsync(CreateRoomRequest request)
     {
         var client = CreateClient();
         var response = await client.PostAsJsonAsync("/api/rooms", request);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"API returned {response.StatusCode}: {errorContent}");
+        }
+        
         var result = await response.Content.ReadFromJsonAsync<ApiResponse<CreateRoomResponse>>();
         return result?.Data;
     }

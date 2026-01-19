@@ -1,94 +1,60 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using YASS.Client.Core.Interfaces;
-using YASS.Client.Core.Services;
 using YASS.Client.Desktop.Services;
-using YASS.Shared.Enums;
 using YASS.Shared.Models;
 
 namespace YASS.Client.Desktop.ViewModels;
 
-public partial class StreamingViewModel : ObservableObject, IDisposable
+public partial class StreamingViewModel : ObservableObject
 {
     private readonly ILogger<StreamingViewModel> _logger;
     private readonly IApiService _apiService;
-    private readonly ISettingsService _settingsService;
-    private readonly ScreenSharingService _sharingService;
-    private CaptureSource? _captureSource;
     private RoomInfo? _room;
-    private StreamConfig? _streamConfig;
-
-    [ObservableProperty]
-    private bool _isStreaming;
-
-    [ObservableProperty]
-    private SharingState _state = SharingState.Stopped;
 
     [ObservableProperty]
     private string _statusMessage = "准备就绪";
 
     [ObservableProperty]
-    private string _duration = "00:00:00";
-
-    [ObservableProperty]
-    private double _currentBitrate;
-
-    [ObservableProperty]
-    private double _currentFps;
-
-    [ObservableProperty]
-    private long _framesSent;
-
-    [ObservableProperty]
-    private long _framesDropped;
-
-    [ObservableProperty]
-    private string _encoderInfo = string.Empty;
-
-    [ObservableProperty]
     private string _roomName = string.Empty;
 
     [ObservableProperty]
-    private string _captureSourceName = string.Empty;
+    private string _rtmpUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _streamKey = string.Empty;
+
+    [ObservableProperty]
+    private bool _isRtmpUrlReady;
 
     public StreamingViewModel(
         ILogger<StreamingViewModel> logger,
-        IApiService apiService,
-        ISettingsService settingsService,
-        ScreenSharingService sharingService)
+        IApiService apiService)
     {
         _logger = logger;
         _apiService = apiService;
-        _settingsService = settingsService;
-        _sharingService = sharingService;
-
-        _sharingService.StateChanged += OnStateChanged;
-        _sharingService.StatsUpdated += OnStatsUpdated;
     }
 
-    public void Initialize(CaptureSource captureSource, RoomInfo room, StreamConfig streamConfig)
+    public void Initialize(RoomInfo room)
     {
-        _captureSource = captureSource;
         _room = room;
-        _streamConfig = streamConfig;
-
         RoomName = room.Name;
-        CaptureSourceName = captureSource.DisplayName;
+        
+        // 立即获取RTMP推流地址
+        _ = LoadRtmpUrlAsync();
     }
 
     [RelayCommand]
-    private async Task StartStreamingAsync()
+    private async Task LoadRtmpUrlAsync()
     {
-        if (_captureSource == null || _room == null || _streamConfig == null)
+        if (_room == null)
         {
-            StatusMessage = "请先配置推流参数";
+            StatusMessage = "房间信息无效";
             return;
         }
 
         try
         {
-            IsStreaming = true;
             StatusMessage = "正在获取推流地址...";
 
             // 获取推流凭证
@@ -96,84 +62,94 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
             if (credentials == null)
             {
                 StatusMessage = "获取推流凭证失败";
-                IsStreaming = false;
                 return;
             }
 
-            StatusMessage = "正在连接服务器...";
-
-            await _sharingService.StartAsync(new SharingOptions
+            // 解析RTMP地址和流密钥
+            var fullUrl = credentials.FullPublishUrl;
+            var lastSlashIndex = fullUrl.LastIndexOf('/');
+            if (lastSlashIndex > 0)
             {
-                CaptureSource = _captureSource,
-                PublishUrl = credentials.FullPublishUrl,
-                StreamConfig = _streamConfig,
-                CaptureCursor = _settingsService.Settings.CaptureCursor
-            });
+                RtmpUrl = fullUrl.Substring(0, lastSlashIndex);
+                StreamKey = fullUrl.Substring(lastSlashIndex + 1);
+            }
+            else
+            {
+                RtmpUrl = fullUrl;
+                StreamKey = "";
+            }
 
-            StatusMessage = "正在推流";
+            IsRtmpUrlReady = true;
+            StatusMessage = "推流地址已生成，请使用OBS、FFmpeg等工具推流";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to start streaming");
-            StatusMessage = $"推流失败: {ex.Message}";
-            IsStreaming = false;
+            _logger.LogError(ex, "Failed to load RTMP URL");
+            StatusMessage = $"获取推流地址失败: {ex.Message}";
         }
     }
 
     [RelayCommand]
-    private async Task StopStreamingAsync()
+    private void CopyRtmpUrl()
     {
+        if (string.IsNullOrEmpty(RtmpUrl))
+        {
+            StatusMessage = "推流地址为空";
+            return;
+        }
+
         try
         {
-            StatusMessage = "正在停止推流...";
-            await _sharingService.StopAsync();
-            StatusMessage = "推流已停止";
+            System.Windows.Clipboard.SetText(RtmpUrl);
+            StatusMessage = "推流地址已复制到剪贴板";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error stopping streaming");
-            StatusMessage = $"停止失败: {ex.Message}";
+            _logger.LogError(ex, "Failed to copy RTMP URL");
+            StatusMessage = "复制失败";
         }
-        finally
+    }
+
+    [RelayCommand]
+    private void CopyStreamKey()
+    {
+        if (string.IsNullOrEmpty(StreamKey))
         {
-            IsStreaming = false;
+            StatusMessage = "流密钥为空";
+            return;
         }
-    }
 
-    private void OnStateChanged(object? sender, SharingStateChangedEventArgs e)
-    {
-        State = e.State;
-
-        switch (e.State)
+        try
         {
-            case SharingState.Running:
-                StatusMessage = "正在推流";
-                break;
-            case SharingState.Stopped:
-                StatusMessage = "推流已停止";
-                IsStreaming = false;
-                break;
-            case SharingState.Error:
-                StatusMessage = $"错误: {e.Error}";
-                IsStreaming = false;
-                break;
+            System.Windows.Clipboard.SetText(StreamKey);
+            StatusMessage = "流密钥已复制到剪贴板";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to copy stream key");
+            StatusMessage = "复制失败";
         }
     }
 
-    private void OnStatsUpdated(object? sender, SharingStatsEventArgs e)
+    [RelayCommand]
+    private void CopyFullUrl()
     {
-        CurrentBitrate = e.CurrentBitrate;
-        CurrentFps = e.CurrentFps;
-        FramesSent = e.FramesSent;
-        FramesDropped = e.FramesDropped;
-        Duration = TimeSpan.FromSeconds(e.DurationSeconds).ToString(@"hh\:mm\:ss");
-        EncoderInfo = $"{e.EncoderType} / {e.CodecType}";
-    }
+        if (string.IsNullOrEmpty(RtmpUrl) || string.IsNullOrEmpty(StreamKey))
+        {
+            StatusMessage = "推流信息不完整";
+            return;
+        }
 
-    public void Dispose()
-    {
-        _sharingService.StateChanged -= OnStateChanged;
-        _sharingService.StatsUpdated -= OnStatsUpdated;
-        GC.SuppressFinalize(this);
+        try
+        {
+            var fullUrl = $"{RtmpUrl}/{StreamKey}";
+            System.Windows.Clipboard.SetText(fullUrl);
+            StatusMessage = "完整推流地址已复制到剪贴板";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to copy full URL");
+            StatusMessage = "复制失败";
+        }
     }
 }
