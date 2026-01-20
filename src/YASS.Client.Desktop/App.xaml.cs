@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,11 @@ public partial class App : Application
     private void OnStartup(object sender, StartupEventArgs e)
     {
         _host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.SetBasePath(AppContext.BaseDirectory);
+                config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            })
             .ConfigureServices((context, services) =>
             {
                 // 日志
@@ -26,10 +32,11 @@ public partial class App : Application
                     builder.SetMinimumLevel(LogLevel.Debug);
                 });
 
-                // HTTP 客户端
+                // HTTP 客户端 - 从配置读取 API 地址
+                var apiBaseAddress = context.Configuration["ApiBaseAddress"] ?? "http://localhost:5000";
                 services.AddHttpClient("YassApi", client =>
                 {
-                    client.BaseAddress = new Uri("http://localhost:5000");
+                    client.BaseAddress = new Uri(apiBaseAddress);
                 });
 
                 // 应用服务
