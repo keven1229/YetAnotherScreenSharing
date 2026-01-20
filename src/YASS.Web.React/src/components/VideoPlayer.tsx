@@ -100,7 +100,7 @@ export default function VideoPlayer({
           type: 'flv',
           url: url,
           isLive: true,
-          hasAudio: false,
+          hasAudio: true,
           hasVideo: true,
           cors: true,
         },
