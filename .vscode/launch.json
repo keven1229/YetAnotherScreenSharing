@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-api",
-            "program": "${workspaceFolder}/src/YASS.Server.Api/YASS.Server.Api/bin/Debug/net9.0/YASS.Server.Api.dll",
+            "program": "${workspaceFolder}/src/YASS.Server.Api/bin/Debug/net9.0/YASS.Server.Api.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/YASS.Server.Api/YASS.Server.Api",
+            "cwd": "${workspaceFolder}/src/YASS.Server.Api",
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "ASPNETCORE_URLS": "http://localhost:5000"
@@ -21,9 +21,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-desktop",
-            "program": "${workspaceFolder}/src/YASS.Client.Desktop/YASS.Client.Desktop/bin/Debug/net9.0-windows10.0.19041.0/YASS.Client.Desktop.dll",
+            "program": "${workspaceFolder}/src/YASS.Client.Desktop/bin/Debug/net9.0-windows10.0.19041.0/YASS.Client.Desktop.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/YASS.Client.Desktop/YASS.Client.Desktop",
+            "cwd": "${workspaceFolder}/src/YASS.Client.Desktop",
             "console": "integratedTerminal",
             "stopAtEntry": false
         },
@@ -32,7 +32,7 @@
             "type": "blazorwasm",
             "request": "launch",
             "browser": "edge",
-            "cwd": "${workspaceFolder}/src/YASS.Web/YASS.Web",
+            "cwd": "${workspaceFolder}/src/YASS.Web",
             "url": "http://localhost:5001"
         }
     ],

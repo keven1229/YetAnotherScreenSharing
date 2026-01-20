@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\YASS.Shared\YASS.Shared\YASS.Shared.csproj" />
+    <ProjectReference Include="..\YASS.Shared\YASS.Shared.csproj" />
   </ItemGroup>
 
 </Project>
