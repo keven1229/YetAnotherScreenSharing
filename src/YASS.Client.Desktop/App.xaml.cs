@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,6 +18,10 @@ public partial class App : Application
 
     private void OnStartup(object sender, StartupEventArgs e)
     {
+        // 注册进程退出事件处理
+        AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -64,7 +69,54 @@ public partial class App : Application
 
     private void OnExit(object sender, ExitEventArgs e)
     {
+        CleanupFFmpegProcesses();
         _host?.Dispose();
+    }
+
+    private void OnProcessExit(object? sender, EventArgs e)
+    {
+        CleanupFFmpegProcesses();
+    }
+
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        CleanupFFmpegProcesses();
+    }
+
+    /// <summary>
+    /// 清理所有可能残留的 FFmpeg 进程
+    /// </summary>
+    private void CleanupFFmpegProcesses()
+    {
+        try
+        {
+            // 获取当前进程 ID
+            var currentProcessId = Environment.ProcessId;
+            
+            // 查找所有 ffmpeg 进程，并终止由本应用启动的进程
+            var ffmpegProcesses = Process.GetProcessesByName("ffmpeg");
+            foreach (var process in ffmpegProcesses)
+            {
+                try
+                {
+                    // 检查进程是否还在运行
+                    if (!process.HasExited)
+                    {
+                        process.Kill(true);  // 强制终止进程及其子进程
+                        process.WaitForExit(1000);
+                    }
+                    process.Dispose();
+                }
+                catch
+                {
+                    // 忽略单个进程清理失败
+                }
+            }
+        }
+        catch
+        {
+            // 忽略清理过程中的异常
+        }
     }
 }
 

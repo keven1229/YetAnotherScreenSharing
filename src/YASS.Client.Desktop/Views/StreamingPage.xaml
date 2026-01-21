@@ -144,6 +144,106 @@
                             </StackPanel>
                         </ui:InfoBar.Content>
                     </ui:InfoBar>
+
+                    <!-- 一键FFmpeg推流 -->
+                    <ui:Card Margin="0,16,0,0">
+                        <StackPanel>
+                            <ui:TextBlock Text="一键推流（内置FFmpeg）" FontTypography="BodyStrong" Margin="0,0,0,12"/>
+                            
+                            <!-- 捕获方式选择 -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:TextBlock Text="捕获方式:" VerticalAlignment="Center" Opacity="0.7"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding CaptureMethodOptions}"
+                                          SelectedItem="{Binding SelectedCaptureMethod}"
+                                          IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"
+                                          Width="150"
+                                          HorizontalAlignment="Left"/>
+                            </Grid>
+
+                            <!-- 音频源选择 -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:TextBlock Text="音频源:" VerticalAlignment="Center" Opacity="0.7"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding AudioSourceOptions}"
+                                          SelectedItem="{Binding SelectedAudioSource}"
+                                          IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"
+                                          Width="300"
+                                          HorizontalAlignment="Left"/>
+                            </Grid>
+
+                            <!-- 输出分辨率选择 -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:TextBlock Text="输出分辨率:" VerticalAlignment="Center" Opacity="0.7"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding OutputResolutionOptions}"
+                                          SelectedItem="{Binding SelectedOutputResolution}"
+                                          IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"
+                                          Width="180"
+                                          HorizontalAlignment="Left"/>
+                                <!-- 自定义分辨率输入 -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0"
+                                           Visibility="{Binding IsCustomResolution, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ui:TextBox Text="{Binding CustomWidth, UpdateSourceTrigger=PropertyChanged}" 
+                                               Width="70"
+                                               IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"/>
+                                    <ui:TextBlock Text="x" VerticalAlignment="Center" Margin="8,0"/>
+                                    <ui:TextBox Text="{Binding CustomHeight, UpdateSourceTrigger=PropertyChanged}" 
+                                               Width="70"
+                                               IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 推流控制按钮 -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <ui:Button Content="帮我推流（FFmpeg）" 
+                                          Command="{Binding StartFFmpegStreamingCommand}"
+                                          Appearance="Primary"
+                                          Icon="{ui:SymbolIcon Play24}"
+                                          IsEnabled="{Binding IsFFmpegStreaming, Converter={StaticResource InverseBoolConverter}}"
+                                          Margin="0,0,8,0"/>
+                                <ui:Button Content="停止推流" 
+                                          Command="{Binding StopFFmpegStreamingCommand}"
+                                          Appearance="Danger"
+                                          Icon="{ui:SymbolIcon Stop24}"
+                                          IsEnabled="{Binding IsFFmpegStreaming}"/>
+                            </StackPanel>
+
+                            <!-- 提示信息 -->
+                            <ui:InfoBar Margin="0,12,0,0" 
+                                       Title="提示" 
+                                       Severity="Informational"
+                                       IsOpen="True"
+                                       IsClosable="False">
+                                <ui:InfoBar.Content>
+                                    <TextBlock TextWrapping="Wrap">
+                                        请将 ffmpeg.exe 放入应用程序的 ffmpeg 或 tools 文件夹中。<LineBreak/>
+                                        <LineBreak/>
+                                        【捕获方式】<LineBreak/>
+                                        • gdigrab: Windows GDI屏幕捕获（推荐）<LineBreak/>
+                                        <LineBreak/>
+                                        【音频源】<LineBreak/>
+                                        • 静音: 不捕获音频，但会生成静音音轨<LineBreak/>
+                                        • 立体声混音: 捕获系统音频（需要在声音设置中启用）<LineBreak/>
+                                        • 麦克风: 捕获麦克风输入
+                                    </TextBlock>
+                                </ui:InfoBar.Content>
+                            </ui:InfoBar>
+                        </StackPanel>
+                    </ui:Card>
                 </StackPanel>
             </ui:Card>
 

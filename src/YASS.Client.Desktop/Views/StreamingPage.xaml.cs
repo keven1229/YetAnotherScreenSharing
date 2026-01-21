@@ -21,5 +21,11 @@ public partial class StreamingPage : FluentWindow
                 await ViewModel.LoadRtmpUrlCommand.ExecuteAsync(null);
             }
         };
+
+        // 窗口关闭时确保 FFmpeg 进程被终止
+        Closing += (s, e) =>
+        {
+            ViewModel.ForceStopFFmpeg();
+        };
     }
 }

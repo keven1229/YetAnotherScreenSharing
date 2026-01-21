@@ -27,4 +27,12 @@
     </None>
   </ItemGroup>
 
+  <!-- FFmpeg 文件夹复制到输出目录 -->
+  <ItemGroup>
+    <None Include="ffmpeg\**\*" Exclude="ffmpeg\README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>ffmpeg\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
 </Project>
