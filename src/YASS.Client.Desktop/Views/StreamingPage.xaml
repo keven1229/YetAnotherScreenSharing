@@ -20,15 +20,18 @@
         <!-- 标题栏 -->
         <ui:TitleBar Grid.Row="0" Title="推流地址" />
 
-        <!-- 主内容 -->
-        <Grid Grid.Row="1" Margin="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <!-- 主内容（带滚动条） -->
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- 房间信息 -->
+                <!-- 房间信息 -->
             <ui:Card Grid.Row="0" Margin="0,0,0,16">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -295,5 +298,6 @@
                 </StackPanel>
             </ui:Card>
         </Grid>
+        </ScrollViewer>
     </Grid>
 </ui:FluentWindow>
