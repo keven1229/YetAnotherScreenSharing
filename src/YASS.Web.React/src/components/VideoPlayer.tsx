@@ -352,7 +352,6 @@ export default function VideoPlayer({
         className="w-full h-full object-contain cursor-pointer"
         muted={isMuted}
         playsInline
-        onClick={togglePlay}
         onPlay={handlePlay}
         onPause={handlePause}
         onError={handleError}
