@@ -16,6 +16,7 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
     private static extern int GetSystemMetrics(int nIndex);
     
     private bool _disposed;
+    private bool _shouldAutoRestart = false;
     
     private const int SM_CXSCREEN = 0;  // 主屏幕宽度
     private const int SM_CYSCREEN = 1;  // 主屏幕高度
@@ -507,18 +508,48 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
                 }
             };
 
-            _ffmpegProcess.Exited += (s, e) =>
+            _ffmpegProcess.Exited += async (s, e) =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                var exitCode = _ffmpegProcess?.ExitCode ?? 0;
+                _logger.LogInformation("FFmpeg process exited with code {ExitCode}", exitCode);
+                
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
                     IsFFmpegStreaming = false;
-                    StatusMessage = "FFmpeg推流已停止";
+                    
+                    if (_shouldAutoRestart && !_disposed)
+                    {
+                        // Unexpected exit - attempt to restart
+                        _logger.LogWarning("FFmpeg process terminated unexpectedly (exit code: {ExitCode}). Attempting to restart...", exitCode);
+                        StatusMessage = $"FFmpeg推流意外中断 (退出码: {exitCode})，正在重启...";
+                        
+                        // Clean up the old process
+                        _ffmpegProcess?.Dispose();
+                        _ffmpegProcess = null;
+                        
+                        // Wait a bit before restarting to avoid rapid restart loops
+                        await Task.Delay(1000);
+                        
+                        // Restart if still should be auto-restarting
+                        if (_shouldAutoRestart && !_disposed)
+                        {
+                            _logger.LogInformation("Restarting FFmpeg streaming...");
+                            await StartFFmpegStreamingAsync();
+                        }
+                    }
+                    else
+                    {
+                        // Manual stop or disposal
+                        StatusMessage = "FFmpeg推流已停止";
+                        _logger.LogInformation("FFmpeg streaming stopped manually");
+                    }
                 });
             };
 
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
 
+            _shouldAutoRestart = true;
             IsFFmpegStreaming = true;
             StatusMessage = $"FFmpeg推流已启动 (使用 {SelectedCaptureMethod}, {screenWidth}x{screenHeight})";
             _logger.LogInformation("FFmpeg streaming started with {CaptureMethod}, resolution: {Width}x{Height}", 
@@ -530,6 +561,7 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
             _logger.LogError(ex, "Failed to start FFmpeg streaming");
             StatusMessage = $"启动FFmpeg推流失败: {ex.Message}";
             IsFFmpegStreaming = false;
+            _shouldAutoRestart = false;
         }
     }
 
@@ -540,11 +572,15 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
         {
             StatusMessage = "FFmpeg推流未在运行";
             IsFFmpegStreaming = false;
+            _shouldAutoRestart = false;
             return;
         }
 
         try
         {
+            // Disable auto-restart before stopping
+            _shouldAutoRestart = false;
+            
             // 发送q命令让ffmpeg优雅退出
             _ffmpegProcess.Kill();
             _ffmpegProcess.Dispose();
@@ -567,6 +603,9 @@ public partial class StreamingViewModel : ObservableObject, IDisposable
     {
         try
         {
+            // Disable auto-restart before force stopping
+            _shouldAutoRestart = false;
+            
             if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
                 _logger.LogInformation("Force stopping FFmpeg process...");
