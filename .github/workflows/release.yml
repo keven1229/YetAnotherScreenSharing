@@ -104,6 +104,40 @@ jobs:
           path: ./artifacts/*.zip
           retention-days: 5
 
+      - name: Output Build Summary
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get_version.outputs.version }}"
+          $tag = "${{ steps.get_version.outputs.tag }}"
+
+          @"
+          # 🔨 构建完成
+
+          ## 📋 构建信息
+
+          | 项目 | 值 |
+          |------|-----|
+          | 🏷️ **版本** | ``$tag`` |
+          | 🔢 **版本号** | ``$version`` |
+          | 📅 **构建时间** | $(Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC") |
+          | 🖥️ **运行环境** | ``${{ runner.os }}`` |
+
+          ## 📦 构建产物
+
+          | 产物名称 | 平台 | 说明 |
+          |----------|------|------|
+          | ``YASS.Server.Api-win-x64-$version.zip`` | Windows x64 | 服务端 API |
+          | ``YASS.Server.Api-linux-x64-$version.zip`` | Linux x64 | 服务端 API |
+          | ``YASS.Client.Desktop-win-x64-$version.zip`` | Windows x64 | 桌面客户端 (WPF) |
+          | ``YASS.Web-$version.zip`` | 跨平台 | Web 客户端 (Blazor) |
+
+          ## 📁 产物下载
+
+          🔗 **Artifacts 名称**: ``release-packages``
+
+          💡 可在 [Actions 页面](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 下载构建产物
+          "@ >> $env:GITHUB_STEP_SUMMARY
+
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -168,3 +202,45 @@ jobs:
           files: ./artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output Release Summary
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # 🎉 发布成功!
+
+          ## 📋 发布信息
+
+          | 项目 | 值 |
+          |------|-----|
+          | 🏷️ **Tag** | \`$TAG\` |
+          | 🔢 **版本号** | \`$VERSION\` |
+          | 📅 **发布时间** | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |
+          | 🔖 **预发布** | ${{ contains(steps.get_version.outputs.tag, '-') && '是 ⚠️' || '否 ✅' }} |
+
+          ## 📝 更新日志
+
+          ${{ steps.release_notes.outputs.notes }}
+
+          ## 🔗 相关链接
+
+          - 📦 **Release 页面**: [${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG](${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG)
+          - 🏃 **Actions 运行**: [${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ## 📦 发布产物
+
+          | 文件名 | 平台 | 说明 |
+          |--------|------|------|
+          | \`YASS.Server.Api-win-x64-$VERSION.zip\` | Windows x64 | 服务端 API (自包含) |
+          | \`YASS.Server.Api-linux-x64-$VERSION.zip\` | Linux x64 | 服务端 API (自包含) |
+          | \`YASS.Client.Desktop-win-x64-$VERSION.zip\` | Windows x64 | 桌面客户端 (WPF) |
+          | \`YASS.Web-$VERSION.zip\` | 跨平台 | Web 客户端 (Blazor WASM) |
+
+          ---
+
+          💡 用户可从 [Releases 页面](${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG) 下载所需版本
+          EOF
+
+          echo "::notice title=🎉 发布成功::Release $TAG 已发布到 ${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG"
