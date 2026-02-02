@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        shell: bash
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG_NAME, Version: $VERSION"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore YASS.sln
+
+      # Build Server API (cross-platform)
+      - name: Publish Server API (Windows x64)
+        run: |
+          dotnet publish src/YASS.Server.Api/YASS.Server.Api.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:Version=${{ steps.get_version.outputs.version }} `
+            -o ./publish/YASS.Server.Api-win-x64
+
+      - name: Publish Server API (Linux x64)
+        run: |
+          dotnet publish src/YASS.Server.Api/YASS.Server.Api.csproj `
+            -c Release `
+            -r linux-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:Version=${{ steps.get_version.outputs.version }} `
+            -o ./publish/YASS.Server.Api-linux-x64
+
+      # Build Desktop Client (Windows only - WPF)
+      - name: Publish Desktop Client (Windows x64)
+        run: |
+          dotnet publish src/YASS.Client.Desktop/YASS.Client.Desktop.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:Version=${{ steps.get_version.outputs.version }} `
+            -o ./publish/YASS.Client.Desktop-win-x64
+
+      # Build Web Client (Blazor WebAssembly)
+      - name: Publish Web Client
+        run: |
+          dotnet publish src/YASS.Web/YASS.Web.csproj `
+            -c Release `
+            -p:Version=${{ steps.get_version.outputs.version }} `
+            -o ./publish/YASS.Web
+
+      # Package artifacts
+      - name: Package artifacts
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get_version.outputs.version }}"
+
+          # Create artifacts directory
+          New-Item -ItemType Directory -Force -Path ./artifacts
+
+          # Package Server API Windows
+          Compress-Archive -Path ./publish/YASS.Server.Api-win-x64/* -DestinationPath ./artifacts/YASS.Server.Api-win-x64-$version.zip
+
+          # Package Server API Linux
+          Compress-Archive -Path ./publish/YASS.Server.Api-linux-x64/* -DestinationPath ./artifacts/YASS.Server.Api-linux-x64-$version.zip
+
+          # Package Desktop Client
+          Compress-Archive -Path ./publish/YASS.Client.Desktop-win-x64/* -DestinationPath ./artifacts/YASS.Client.Desktop-win-x64-$version.zip
+
+          # Package Web Client
+          Compress-Archive -Path ./publish/YASS.Web/wwwroot/* -DestinationPath ./artifacts/YASS.Web-$version.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: ./artifacts/*.zip
+          retention-days: 5
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # No previous tag, get all commits
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "$TAG")
+          else
+            # Get commits between previous tag and current tag
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG..$TAG")
+          fi
+
+          # Generate release notes
+          {
+            echo "notes<<EOF"
+            echo "## What's Changed"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-$(git rev-list --max-parents=0 HEAD | head -1)}...$TAG"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-packages
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.tag }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.tag, '-') }}
+          files: ./artifacts/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
