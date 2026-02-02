@@ -42,4 +42,14 @@ public interface IRoomService
     /// 刷新推流密钥
     /// </summary>
     Task<PublishCredentials?> RefreshStreamKeyAsync(string roomId);
+
+    /// <summary>
+    /// 更新房间隐私模式
+    /// </summary>
+    Task<bool> UpdatePrivacyModeAsync(string roomId, bool isPrivacyMode);
+
+    /// <summary>
+    /// 更新房间预览图
+    /// </summary>
+    Task<bool> UpdateThumbnailAsync(string roomId, string? thumbnailUrl);
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using YASS.Server.Api.Services;
 using YASS.Shared.DTOs;
 using YASS.Shared.Interfaces;
 
@@ -10,15 +11,18 @@ public class RoomsController : ControllerBase
 {
     private readonly IRoomService _roomService;
     private readonly IAuthService _authService;
+    private readonly ThumbnailService _thumbnailService;
     private readonly ILogger<RoomsController> _logger;
 
     public RoomsController(
         IRoomService roomService,
         IAuthService authService,
+        ThumbnailService thumbnailService,
         ILogger<RoomsController> logger)
     {
         _roomService = roomService;
         _authService = authService;
+        _thumbnailService = thumbnailService;
         _logger = logger;
     }
 
@@ -162,4 +166,56 @@ public class RoomsController : ControllerBase
         var credentials = await _roomService.RefreshStreamKeyAsync(roomId);
         return Ok(ApiResponse<Shared.Models.PublishCredentials>.Ok(credentials!));
     }
+
+    /// <summary>
+    /// 切换房间隐私模式
+    /// </summary>
+    [HttpPatch("{roomId}/privacy")]
+    public async Task<ActionResult<ApiResponse>> UpdatePrivacyMode(
+        string roomId, 
+        [FromBody] UpdatePrivacyModeRequest request)
+    {
+        var room = await _roomService.GetRoomAsync(roomId);
+        if (room == null)
+        {
+            return NotFound(ApiResponse.Fail("房间不存在", "ROOM_NOT_FOUND"));
+        }
+
+        // 检查权限
+        var userInfo = await _authService.GetUserInfoAsync(User);
+        var hasPermission = await _authService.HasPermissionAsync(
+            userInfo?.Id ?? "", roomId, RoomPermission.Manage);
+
+        if (!hasPermission)
+        {
+            return Forbid();
+        }
+
+        var updated = await _roomService.UpdatePrivacyModeAsync(roomId, request.IsPrivacyMode);
+        if (!updated)
+        {
+            return BadRequest(ApiResponse.Fail("更新失败", "UPDATE_FAILED"));
+        }
+
+        // 如果启用隐私模式，停止截图；否则如果房间正在直播，启动截图
+        if (request.IsPrivacyMode)
+        {
+            _thumbnailService.StopCapture(roomId);
+        }
+        else if (room.Status == Shared.Enums.RoomStatus.Live)
+        {
+            _thumbnailService.StartCapture(roomId);
+        }
+
+        _logger.LogInformation("Room {RoomId} privacy mode updated to {IsPrivacyMode}", roomId, request.IsPrivacyMode);
+        return Ok(ApiResponse.Ok());
+    }
+}
+
+/// <summary>
+/// 更新隐私模式请求
+/// </summary>
+public class UpdatePrivacyModeRequest
+{
+    public bool IsPrivacyMode { get; set; }
 }

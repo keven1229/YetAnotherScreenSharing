@@ -15,6 +15,7 @@ public interface IApiService
     Task<RoomInfo?> GetRoomAsync(string roomId);
     Task<PlaybackUrls?> GetPlaybackUrlsAsync(string roomId);
     Task<PublishCredentials?> GetPublishCredentialsAsync(string roomId);
+    Task<bool> DeleteRoomAsync(string roomId);
 }
 
 /// <summary>
@@ -79,5 +80,19 @@ public class ApiService : IApiService
         var client = CreateClient();
         var response = await client.GetFromJsonAsync<ApiResponse<PublishCredentials>>($"/api/rooms/{roomId}/publish");
         return response?.Data;
+    }
+
+    public async Task<bool> DeleteRoomAsync(string roomId)
+    {
+        var client = CreateClient();
+        var response = await client.DeleteAsync($"/api/rooms/{roomId}");
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+        
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+        return result?.Success ?? false;
     }
 }

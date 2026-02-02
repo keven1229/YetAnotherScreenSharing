@@ -14,4 +14,9 @@ public class CreateRoomRequest
     /// 房间描述
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// 是否启用隐私模式（启用后不在房间列表显示预览图）
+    /// </summary>
+    public bool IsPrivacyMode { get; set; }
 }

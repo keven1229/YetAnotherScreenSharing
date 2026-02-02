@@ -53,7 +53,27 @@ public class RoomInfo
     public DateTime? StartedAt { get; set; }
 
     /// <summary>
+    /// 最后活跃时间（用于超时清理）
+    /// </summary>
+    public DateTime LastActiveAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// 流配置信息
     /// </summary>
     public StreamConfig? StreamConfig { get; set; }
+
+    /// <summary>
+    /// 预览图URL
+    /// </summary>
+    public string? ThumbnailUrl { get; set; }
+
+    /// <summary>
+    /// 预览图更新时间
+    /// </summary>
+    public DateTime? ThumbnailUpdatedAt { get; set; }
+
+    /// <summary>
+    /// 是否启用隐私模式（启用后不在房间列表显示预览图）
+    /// </summary>
+    public bool IsPrivacyMode { get; set; }
 }

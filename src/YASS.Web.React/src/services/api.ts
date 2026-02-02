@@ -6,10 +6,18 @@ import type {
   PlaybackUrls,
   CreateRoomRequest,
   CreateRoomResponse,
+  PublishCredentials,
 } from '../types';
 
 // API 基础地址
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+/**
+ * 获取 API 基础地址（用于构建静态资源URL）
+ */
+export function getApiBaseUrl(): string {
+  return API_BASE_URL;
+}
 
 // 创建 axios 实例
 const apiClient: AxiosInstance = axios.create({
@@ -100,6 +108,16 @@ export async function refreshStreamKey(roomId: string): Promise<void> {
   if (!response.data.success) {
     throw new Error(response.data.error || '刷新失败');
   }
+}
+
+/**
+ * 获取推流凭证
+ */
+export async function getPublishCredentials(roomId: string): Promise<PublishCredentials> {
+  const response = await apiClient.get<ApiResponse<PublishCredentials>>(
+    `/api/rooms/${roomId}/publish`
+  );
+  return unwrapResponse(response.data);
 }
 
 export { apiClient };

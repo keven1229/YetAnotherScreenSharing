@@ -61,7 +61,14 @@ export interface RoomInfo {
   viewerCount: number;
   createdAt: string;
   startedAt?: string;
+  lastActiveAt?: string;
   streamConfig?: StreamConfig;
+  /** 预览图URL */
+  thumbnailUrl?: string;
+  /** 预览图更新时间 */
+  thumbnailUpdatedAt?: string;
+  /** 是否启用隐私模式 */
+  isPrivacyMode: boolean;
 }
 
 /**
@@ -105,6 +112,8 @@ export interface ApiResponse<T> {
 export interface CreateRoomRequest {
   name: string;
   description?: string;
+  /** 是否启用隐私模式 */
+  isPrivacyMode?: boolean;
 }
 
 /**

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using YASS.Server.Api.Services;
 using YASS.Shared.Enums;
 using YASS.Shared.Interfaces;
 
@@ -12,13 +13,16 @@ namespace YASS.Server.Api.Controllers;
 public class SrsCallbackController : ControllerBase
 {
     private readonly IRoomService _roomService;
+    private readonly ThumbnailService _thumbnailService;
     private readonly ILogger<SrsCallbackController> _logger;
 
     public SrsCallbackController(
         IRoomService roomService,
+        ThumbnailService thumbnailService,
         ILogger<SrsCallbackController> logger)
     {
         _roomService = roomService;
+        _thumbnailService = thumbnailService;
         _logger = logger;
     }
 
@@ -44,6 +48,13 @@ public class SrsCallbackController : ControllerBase
         if (updated)
         {
             _logger.LogInformation("Room {RoomId} status updated to Live", roomId);
+
+            // 检查房间是否启用隐私模式，未启用则开始截图
+            var room = await _roomService.GetRoomAsync(roomId);
+            if (room != null && !room.IsPrivacyMode)
+            {
+                _thumbnailService.StartCapture(roomId);
+            }
         }
         else
         {
@@ -67,6 +78,9 @@ public class SrsCallbackController : ControllerBase
         {
             return Ok(new { code = 0 });
         }
+
+        // 停止截图任务
+        _thumbnailService.StopCapture(roomId);
 
         // 更新房间状态为等待中
         var updated = await _roomService.UpdateRoomStatusAsync(roomId, RoomStatus.Waiting);

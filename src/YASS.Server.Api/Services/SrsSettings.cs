@@ -29,4 +29,19 @@ public class SrsSettings
     /// H.264 转码流后缀
     /// </summary>
     public string H264Suffix { get; set; } = "_h264";
+
+    /// <summary>
+    /// 预览图存储路径
+    /// </summary>
+    public string ThumbnailStoragePath { get; set; } = "wwwroot/thumbnails";
+
+    /// <summary>
+    /// 预览图截取间隔（秒）
+    /// </summary>
+    public int ThumbnailIntervalSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// FFmpeg 可执行文件路径
+    /// </summary>
+    public string FFmpegPath { get; set; } = "ffmpeg";
 }

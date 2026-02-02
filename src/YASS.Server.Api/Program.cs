@@ -25,9 +25,11 @@ builder.Services.AddCors(options =>
 // Application services
 builder.Services.AddSingleton<IRoomService, InMemoryRoomService>();
 builder.Services.AddSingleton<IAuthService, DefaultAuthService>();
+builder.Services.AddSingleton<ThumbnailService>();
 
 // Configuration
 builder.Services.Configure<SrsSettings>(builder.Configuration.GetSection("Srs"));
+builder.Services.Configure<RoomSettings>(builder.Configuration.GetSection("RoomSettings"));
 
 var app = builder.Build();
 
@@ -37,6 +39,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// 静态文件中间件（用于提供缩略图）
+app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 app.UseAuthorization();

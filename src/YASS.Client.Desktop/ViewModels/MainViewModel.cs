@@ -31,6 +31,15 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _newRoomName = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PrivacyModeTooltip))]
+    private bool _isPrivacyMode;
+
+    /// <summary>
+    /// 隐私模式提示文本
+    /// </summary>
+    public string PrivacyModeTooltip => "启用后房间列表不显示预览图";
+
     public MainViewModel(IApiService apiService)
     {
         _apiService = apiService;
@@ -98,7 +107,8 @@ public partial class MainViewModel : ObservableObject
             
             var response = await _apiService.CreateRoomAsync(new Shared.DTOs.CreateRoomRequest
             {
-                Name = NewRoomName
+                Name = NewRoomName,
+                IsPrivacyMode = IsPrivacyMode
             });
 
             if (response != null)
@@ -144,5 +154,56 @@ public partial class MainViewModel : ObservableObject
         var streamingPage = new StreamingPage(streamingViewModel);
         streamingPage.Owner = System.Windows.Application.Current.MainWindow;
         streamingPage.Show();
+    }
+
+    [RelayCommand]
+    private async Task DeleteRoomAsync(RoomInfo? room)
+    {
+        if (room == null)
+        {
+            StatusMessage = "请选择要删除的房间";
+            return;
+        }
+
+        // 确认删除
+        var result = System.Windows.MessageBox.Show(
+            $"确定要删除房间 '{room.Name}' 吗？",
+            "确认删除",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "正在删除房间...";
+
+            var success = await _apiService.DeleteRoomAsync(room.Id);
+            if (success)
+            {
+                Rooms.Remove(room);
+                if (SelectedRoom == room)
+                {
+                    SelectedRoom = null;
+                }
+                StatusMessage = $"房间 '{room.Name}' 已删除";
+            }
+            else
+            {
+                StatusMessage = "删除房间失败";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"删除房间失败: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }
