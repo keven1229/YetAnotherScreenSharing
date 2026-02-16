@@ -138,7 +138,7 @@ export default function PublishInfoModal({
 
         {/* 推流信息字段 */}
         <InfoField label="RTMP 服务器" value={credentials.rtmpUrl} />
-        <InfoField label="推流密钥" value={credentials.streamKey} />
+        <InfoField label="推流密钥" value={`${credentials.roomId}?key=${credentials.streamKey}`} />
         <InfoField label="完整推流 URL" value={credentials.fullPublishUrl} />
 
         {/* 过期时间 */}
